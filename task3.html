@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tic Tac Toe</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #f0f0f0;
+    }
+
+    h1 {
+      margin-top: 20px;
+    }
+
+    .game-settings {
+      margin: 20px;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      gap: 5px;
+      justify-content: center;
+      margin: 0 auto;
+    }
+
+    .cell {
+      width: 100px;
+      height: 100px;
+      background: white;
+      font-size: 2em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border: 2px solid #444;
+    }
+
+    .cell.taken {
+      cursor: not-allowed;
+    }
+
+    .status {
+      font-size: 1.2em;
+      margin-top: 20px;
+    }
+
+    button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      font-size: 1em;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Tic Tac Toe</h1>
+
+  <div class="game-settings">
+    <label>
+      <input type="radio" name="mode" value="pvp" checked />
+      Play vs Player
+    </label>
+    <label>
+      <input type="radio" name="mode" value="cpu" />
+      Play vs Computer
+    </label>
+  </div>
+
+  <div class="board" id="board"></div>
+  <div class="status" id="status">Player X's turn</div>
+  <button onclick="resetGame()">Restart Game</button>
+
+  <script>
+    const boardElement = document.getElementById('board');
+    const statusElement = document.getElementById('status');
+    let gameBoard = Array(9).fill(null);
+    let currentPlayer = 'X';
+    let gameOver = false;
+
+    function initializeBoard() {
+      boardElement.innerHTML = '';
+      gameBoard = Array(9).fill(null);
+      currentPlayer = 'X';
+      gameOver = false;
+      statusElement.textContent = `Player ${currentPlayer}'s turn`;
+
+      for (let i = 0; i < 9; i++) {
+        const cell = document.createElement('div');
+        cell.classList.add('cell');
+        cell.dataset.index = i;
+        cell.addEventListener('click', handleClick);
+        boardElement.appendChild(cell);
+      }
+    }
+
+    function handleClick(event) {
+      const index = event.target.dataset.index;
+
+      if (gameBoard[index] || gameOver) return;
+
+      makeMove(index, currentPlayer);
+
+      if (checkWin(currentPlayer)) {
+        statusElement.textContent = `Player ${currentPlayer} wins!`;
+        gameOver = true;
+        return;
+      }
+
+      if (gameBoard.every(cell => cell)) {
+        statusElement.textContent = "It's a draw!";
+        gameOver = true;
+        return;
+      }
+
+      currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+      statusElement.textContent = `Player ${currentPlayer}'s turn`;
+
+      const mode = document.querySelector('input[name="mode"]:checked').value;
+      if (mode === 'cpu' && currentPlayer === 'O' && !gameOver) {
+        setTimeout(computerPlay, 500);
+      }
+    }
+
+    function makeMove(index, player) {
+      gameBoard[index] = player;
+      const cell = document.querySelector(`[data-index="${index}"]`);
+      cell.textContent = player;
+      cell.classList.add('taken');
+    }
+
+    function computerPlay() {
+      const emptyIndices = gameBoard
+        .map((val, idx) => (val === null ? idx : null))
+        .filter(val => val !== null);
+
+      const randomMove = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+      makeMove(randomMove, 'O');
+
+      if (checkWin('O')) {
+        statusElement.textContent = `Computer wins!`;
+        gameOver = true;
+        return;
+      }
+
+      if (gameBoard.every(cell => cell)) {
+        statusElement.textContent = "It's a draw!";
+        gameOver = true;
+        return;
+      }
+
+      currentPlayer = 'X';
+      statusElement.textContent = `Player ${currentPlayer}'s turn`;
+    }
+
+    function checkWin(player) {
+      const winPatterns = [
+        [0, 1, 2],
+        [3, 4, 5],
+        [6, 7, 8],
+        [0, 3, 6],
+        [1, 4, 7],
+        [2, 5, 8],
+        [0, 4, 8],
+        [2, 4, 6]
+      ];
+
+      return winPatterns.some(pattern =>
+        pattern.every(index => gameBoard[index] === player)
+      );
+    }
+
+    function resetGame() {
+      initializeBoard();
+    }
+
+    initializeBoard();
+  </script>
+</body>
+</html>
